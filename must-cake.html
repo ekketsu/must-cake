@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Must Cake - Menu Pâtisserie Élégante</title> <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles */
+        html {
+             scroll-behavior: smooth; /* Défilement fluide pour les liens d'ancrage */
+        }
+        body {
+            font-family: 'Lato', sans-serif;
+            background-color: #111111; /* Fond quasi noir */
+            color: #f0f0f0; /* Texte blanc cassé */
+            overflow-x: hidden; /* Empêcher le défilement horizontal */
+        }
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+            color: #f472b6; /* Rose vif pour les titres */
+        }
+        #hero-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            display: block;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            text-shadow: 0px 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* --- Contact Button Styles (Shared) --- */
+        .contact-button {
+            background-color: #f472b6; /* Rose vif */
+            color: #ffffff; /* Icône/texte blanc */
+            font-family: 'Lato', sans-serif;
+            font-weight: bold;
+            border: none;
+            border-radius: 9999px; /* Forme de cercle initiale */
+            padding: 0.75rem; /* Rembourrage initial pour le cercle */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            text-shadow: none;
+            box-shadow: 0 4px 10px rgba(244, 114, 182, 0.3); /* Lueur rose */
+            cursor: pointer;
+            overflow: hidden;
+            white-space: nowrap;
+            /* Transitions fluides pour plusieurs propriétés */
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease, width 0.4s ease-in-out, padding 0.4s ease-in-out;
+            width: 3rem; /* Largeur initiale pour le cercle */
+            height: 3rem; /* Hauteur initiale pour le cercle */
+        }
+
+        .contact-button .button-icon {
+            display: inline-block;
+            width: 1.5rem; /* Taille de l'icône */
+            height: 1.5rem;
+            fill: currentColor; /* Utilise la couleur du texte du bouton (blanc) */
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .contact-button .button-text {
+            display: inline-block;
+            max-width: 0; /* Masquer le texte initialement */
+            opacity: 0;
+            margin-left: 0;
+            vertical-align: middle;
+            overflow: hidden;
+            /* Transition pour la révélation du texte */
+            transition: max-width 0.4s ease-in-out 0.1s, opacity 0.3s ease-in-out 0.1s, margin-left 0.4s ease-in-out 0.1s; /* Délai léger pour la révélation du texte */
+        }
+
+        /* Hover State (Shared) */
+        .contact-button:hover {
+            background-color: #f9a8d4; /* Rose plus clair au survol */
+            color: #111111; /* Texte plus sombre au survol */
+            transform: translateY(-2px) scale(1.02); /* Léger soulèvement et mise à l'échelle */
+            box-shadow: 0 6px 15px rgba(244, 114, 182, 0.5); /* Lueur améliorée */
+            width: auto; /* Permettre à la largeur de s'étendre */
+            padding: 0.75rem 1.25rem; /* Ajuster le rembourrage pour le texte */
+        }
+
+        .contact-button:hover .button-icon {
+             /* Optionnel : Ajouter une animation d'icône */
+             /* transform: rotate(15deg) scale(1.1); */
+        }
+
+        .contact-button:hover .button-text {
+            max-width: 200px; /* Révéler le texte en définissant max-width */
+            opacity: 1;
+            margin-left: 0.5rem; /* Ajouter de l'espace entre l'icône et le texte */
+        }
+        /* --- Fin des styles de boutons de contact --- */
+
+        /* Styles des éléments du menu */
+        .menu-item {
+            display: flex;
+            flex-direction: column; /* Empiler image et texte sur petits écrans */
+            margin-bottom: 4rem;
+            padding: 3rem 0; /* Increased base padding */
+            border-bottom: 1px solid #333; /* Séparateur */
+            overflow: hidden; /* Keep overflow hidden */
+        }
+        .menu-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .menu-item-image {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.4s ease-out, filter 0.4s ease-out; /* Added transition */
+        }
+        .menu-item-image:hover {
+            transform: scale(1.05); /* Subtle zoom on hover */
+            filter: brightness(1.1); /* Slight brightness increase */
+        }
+        .menu-item-content {
+            flex: 1;
+        }
+        .contact-buttons {
+            margin-top: 1.5rem; /* Espace au-dessus des boutons */
+        }
+
+        /* Disposition bureau pour les éléments du menu */
+        @media (min-width: 768px) { /* Point de rupture md */
+            .menu-item {
+                flex-direction: row; /* Disposition côte à côte */
+                align-items: center;
+                gap: 3rem;
+                padding: 3rem 0;
+            }
+            .menu-item:nth-child(even) {
+                 flex-direction: row-reverse; /* Alterner la position de l'image */
+            }
+            .menu-item-image {
+                width: 40%;
+                max-width: 400px;
+                margin-bottom: 0;
+            }
+        }
+
+        .content-section {
+            background-color: #111111;
+            position: relative;
+            z-index: 1;
+        }
+        .footer {
+             background-color: #1f1f1f; /* Noir légèrement plus clair pour le pied de page */
+             position: relative;
+             z-index: 1;
+             border-top: 1px solid #333;
+        }
+
+        /* Mobile Menu Overlay Styles */
+        #mobile-menu-overlay {
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+            visibility: hidden; /* Start hidden */
+            opacity: 0;
+        }
+        #mobile-menu-overlay.is-open {
+            visibility: visible; /* Make visible when open */
+            opacity: 1;
+        }
+        /* Optional: Add subtle scale effect to content */
+        #mobile-menu-overlay > div {
+             transition: transform 0.3s ease-in-out;
+             transform: scale(0.95);
+        }
+         #mobile-menu-overlay.is-open > div {
+             transform: scale(1);
+         }
+
+
+        /* Entrance Animation */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .animate-on-scroll.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Style de bouton simple pour le bouton Explorer du héros */
+        .hero-explore-button {
+            background-color: #f472b6;
+            color: #ffffff;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            font-family: 'Lato', sans-serif;
+            font-weight: bold;
+            border: 1px solid #f472b6;
+            border-radius: 9999px;
+            padding: 0.75rem 1.75rem;
+            display: inline-block;
+            text-align: center;
+            text-shadow: none;
+            box-shadow: 0 4px 10px rgba(244, 114, 182, 0.3);
+            cursor: pointer;
+        }
+        .hero-explore-button:hover {
+            background-color: #f9a8d4;
+            color: #111111;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(244, 114, 182, 0.4);
+        }
+
+    </style>
+</head>
+<body class="antialiased">
+
+    <nav class="sticky top-0 z-30 bg-black bg-opacity-80 backdrop-blur-sm shadow-md">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-3">
+                <a href="#" class="text-pink-400 hover:text-pink-300 text-lg font-semibold">Must Cake</a>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-3">
+                    <a href="#" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Accueil</a>
+                    <a href="#menu" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Menu</a>
+                    <!-- Add more links here if needed -->
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-button" class="text-gray-300 hover:text-white focus:outline-none focus:text-white">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Overlay (Initially Hidden) -->
+        <div id="mobile-menu-overlay" class="md:hidden fixed inset-0 bg-black bg-opacity-90 z-40 flex items-center justify-center">
+             <div class="text-center">
+                 <button id="mobile-menu-close-button" class="absolute top-5 right-5 text-gray-400 hover:text-white">
+                     <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                     </svg>
+                 </button>
+                <div class="flex flex-col space-y-6">
+                    <a href="#" class="text-gray-200 hover:text-pink-300 block px-3 py-2 rounded-md text-2xl font-medium">Accueil</a>
+                    <a href="#menu" class="text-gray-200 hover:text-pink-300 block px-3 py-2 rounded-md text-2xl font-medium">Menu</a>
+                    <!-- Add more links here if needed -->
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <header class="relative h-screen min-h-[500px] flex items-center justify-center text-center overflow-hidden"> <!-- Removed pt -->
+        <canvas id="hero-canvas"></canvas>
+        <div class="hero-content p-6">
+             <h1 class="text-5xl sm:text-6xl md:text-8xl font-bold text-white mb-4">Must Cake</h1> <!-- Adjusted smallest size -->
+            <p class="text-lg sm:text-xl md:text-2xl text-pink-200 mb-8">Pâtisserie Artisanale & Créations Élégantes</p> <a href="#menu" class="hero-explore-button">Découvrez Notre Menu</a> </div>
+    </header>
+
+    <div class="content-section" id="menu">
+        <main class="container mx-auto px-4 py-16 md:py-24">
+
+            <h2 class="text-4xl md:text-5xl font-semibold text-center mb-16 md:mb-20">Menu Signature</h2>
+            <div>
+                <div class="menu-item animate-on-scroll"> <!-- Added animate-on-scroll class -->
+                    <img src="Gemini_Generated_Image_ba1rgyba1rgyba1r.jpeg"
+                         alt="Gâteau Forêt Noire revisitée" class="menu-item-image"
+                         onerror="this.onerror=null; this.src='https://placehold.co/600x400/333333/f472b6?text=Image+Manquante';"> <div class="menu-item-content">
+                        <h3 class="text-3xl font-semibold mb-4">Forêt Noire Revisitée</h3>
+                        <p class="text-gray-300 mb-6 text-lg leading-relaxed">Une interprétation sophistiquée du classique : génoise délicate au chocolat, cerises imbibées de Kirsch, Chantilly légère et fins copeaux de chocolat.</p> <div class="contact-buttons flex flex-col space-y-2 items-start sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2"> <!-- Responsive classes added -->
+                            <button data-cake="Forêt Noire Revisitée" data-type="whatsapp" class="contact-button" aria-label="Demande d'info sur Forêt Noire Revisitée via WhatsApp"> <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 509 511.514"><path fill="currentColor" d="M434.762 74.334C387.553 26.81 323.245 0 256.236 0h-.768C115.795.001 2.121 113.696 2.121 253.456l.001.015a253.516 253.516 0 0033.942 126.671L0 511.514l134.373-35.269a253.416 253.416 0 00121.052 30.9h.003.053C395.472 507.145 509 393.616 509 253.626c0-67.225-26.742-131.727-74.252-179.237l.014-.055zM255.555 464.453c-37.753 0-74.861-10.22-107.293-29.479l-7.72-4.602-79.741 20.889 21.207-77.726-4.984-7.975c-21.147-33.606-32.415-72.584-32.415-112.308 0-116.371 94.372-210.743 210.741-210.743 56.011 0 109.758 22.307 149.277 61.98a210.93 210.93 0 0161.744 149.095c0 116.44-94.403 210.869-210.844 210.869h.028zm115.583-157.914c-6.363-3.202-37.474-18.472-43.243-20.593-5.769-2.121-10.01-3.202-14.315 3.203-4.305 6.404-16.373 20.593-20.063 24.855-3.69 4.263-7.401 4.815-13.679 1.612-6.278-3.202-26.786-9.883-50.899-31.472a192.748 192.748 0 01-35.411-43.867c-3.712-6.363-.404-9.777 2.82-12.873 3.224-3.096 6.363-7.381 9.48-11.092a41.58 41.58 0 006.357-10.597 11.678 11.678 0 00-.508-11.09c-1.718-3.18-14.444-34.357-19.534-47.06-5.09-12.703-10.37-10.603-14.272-10.901-3.902-.297-7.911-.19-12.089-.19a23.322 23.322 0 00-16.964 7.911c-5.707 6.298-22.1 21.673-22.1 52.849s22.671 61.249 25.852 65.532c3.182 4.284 44.663 68.227 108.288 95.649 15.099 6.489 26.891 10.392 36.053 13.403a87.504 87.504 0 0025.216 3.718c4.905 0 9.82-.416 14.65-1.237 12.174-1.782 37.453-15.291 42.776-30.073s5.303-27.57 3.711-30.093c-1.591-2.524-5.704-4.369-12.088-7.615l-.038.021z"/></svg>
+                                <span class="button-text">WhatsApp</span>
+                            </button>
+                            <button data-cake="Forêt Noire Revisitée" data-type="sms" class="contact-button" aria-label="Demande d'info sur Forêt Noire Revisitée via SMS"> <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/></svg>
+                                <span class="button-text">Message</span>
+                            </button>
+                            <button data-cake="Forêt Noire Revisitée" data-type="facebook" class="contact-button" aria-label="Contacter via Facebook pour Forêt Noire Revisitée"> <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M279.14 288l14.22-92.66h-88.91v-60.13c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S260.43 0 225.36 0c-73.22 0-121.08 44.38-121.08 124.72v70.62H22.89V288h81.39v224h100.17V288z"/></svg>
+                                <span class="button-text">Facebook</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="menu-item animate-on-scroll"> <!-- Added animate-on-scroll class -->
+                    <img src="Gemini_Generated_Image_r9fwlyr9fwlyr9fw.jpeg"
+                         alt="Gâteau Fraisier Élégance" class="menu-item-image"
+                         onerror="this.onerror=null; this.src='https://placehold.co/600x400/333333/f472b6?text=Image+Manquante';"> <div class="menu-item-content">
+                        <h3 class="text-3xl font-semibold mb-4">Fraisier Élégance</h3>
+                        <p class="text-gray-300 mb-6 text-lg leading-relaxed">Le gâteau aux fraises français par excellence. Génoise, crème mousseline onctueuse, fraises fraîches du marché et une touche de massepain.</p> <div class="contact-buttons flex flex-col space-y-2 items-start sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2"> <!-- Responsive classes added -->
+                            <button data-cake="Fraisier Élégance" data-type="whatsapp" class="contact-button" aria-label="Demande d'info sur Fraisier Élégance via WhatsApp"> <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 509 511.514"><path fill="currentColor" d="M434.762 74.334C387.553 26.81 323.245 0 256.236 0h-.768C115.795.001 2.121 113.696 2.121 253.456l.001.015a253.516 253.516 0 0033.942 126.671L0 511.514l134.373-35.269a253.416 253.416 0 00121.052 30.9h.003.053C395.472 507.145 509 393.616 509 253.626c0-67.225-26.742-131.727-74.252-179.237l.014-.055zM255.555 464.453c-37.753 0-74.861-10.22-107.293-29.479l-7.72-4.602-79.741 20.889 21.207-77.726-4.984-7.975c-21.147-33.606-32.415-72.584-32.415-112.308 0-116.371 94.372-210.743 210.741-210.743 56.011 0 109.758 22.307 149.277 61.98a210.93 210.93 0 0161.744 149.095c0 116.44-94.403 210.869-210.844 210.869h.028zm115.583-157.914c-6.363-3.202-37.474-18.472-43.243-20.593-5.769-2.121-10.01-3.202-14.315 3.203-4.305 6.404-16.373 20.593-20.063 24.855-3.69 4.263-7.401 4.815-13.679 1.612-6.278-3.202-26.786-9.883-50.899-31.472a192.748 192.748 0 01-35.411-43.867c-3.712-6.363-.404-9.777 2.82-12.873 3.224-3.096 6.363-7.381 9.48-11.092a41.58 41.58 0 006.357-10.597 11.678 11.678 0 00-.508-11.09c-1.718-3.18-14.444-34.357-19.534-47.06-5.09-12.703-10.37-10.603-14.272-10.901-3.902-.297-7.911-.19-12.089-.19a23.322 23.322 0 00-16.964 7.911c-5.707 6.298-22.1 21.673-22.1 52.849s22.671 61.249 25.852 65.532c3.182 4.284 44.663 68.227 108.288 95.649 15.099 6.489 26.891 10.392 36.053 13.403a87.504 87.504 0 0025.216 3.718c4.905 0 9.82-.416 14.65-1.237 12.174-1.782 37.453-15.291 42.776-30.073s5.303-27.57 3.711-30.093c-1.591-2.524-5.704-4.369-12.088-7.615l-.038.021z"/></svg>
+                                <span class="button-text">WhatsApp</span>
+                            </button>
+                             <button data-cake="Fraisier Élégance" data-type="sms" class="contact-button" aria-label="Demande d'info sur Fraisier Élégance via SMS"> <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/></svg>
+                                <span class="button-text">Message</span>
+                            </button>
+                            <button data-cake="Fraisier Élégance" data-type="facebook" class="contact-button" aria-label="Contacter via Facebook pour Fraisier Élégance"> <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M279.14 288l14.22-92.66h-88.91v-60.13c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S260.43 0 225.36 0c-73.22 0-121.08 44.38-121.08 124.72v70.62H22.89V288h81.39v224h100.17V288z"/></svg>
+                                <span class="button-text">Facebook</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="menu-item animate-on-scroll"> <!-- Added animate-on-scroll class -->
+                    <img src="Gemini_Generated_Image_s8z4i0s8z4i0s8z4.jpeg"
+                         alt="Gâteau Délice Passion & Mangue" class="menu-item-image"
+                         onerror="this.onerror=null; this.src='https://placehold.co/600x400/333333/f472b6?text=Image+Manquante';"> <div class="menu-item-content">
+                        <h3 class="text-3xl font-semibold mb-4">Délice Passion & Mangue</h3>
+                        <p class="text-gray-300 mb-6 text-lg leading-relaxed">Une composition exotique de dacquoise coco, mousse passion vibrante et crémeux mangue onctueux. Un goût de soleil.</p> <div class="contact-buttons flex flex-col space-y-2 items-start sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2"> <!-- Responsive classes added -->
+                             <button data-cake="Délice Passion & Mangue" data-type="whatsapp" class="contact-button" aria-label="Demande d'info sur Délice Passion & Mangue via WhatsApp"> <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 509 511.514"><path fill="currentColor" d="M434.762 74.334C387.553 26.81 323.245 0 256.236 0h-.768C115.795.001 2.121 113.696 2.121 253.456l.001.015a253.516 253.516 0 0033.942 126.671L0 511.514l134.373-35.269a253.416 253.416 0 00121.052 30.9h.003.053C395.472 507.145 509 393.616 509 253.626c0-67.225-26.742-131.727-74.252-179.237l.014-.055zM255.555 464.453c-37.753 0-74.861-10.22-107.293-29.479l-7.72-4.602-79.741 20.889 21.207-77.726-4.984-7.975c-21.147-33.606-32.415-72.584-32.415-112.308 0-116.371 94.372-210.743 210.741-210.743 56.011 0 109.758 22.307 149.277 61.98a210.93 210.93 0 0161.744 149.095c0 116.44-94.403 210.869-210.844 210.869h.028zm115.583-157.914c-6.363-3.202-37.474-18.472-43.243-20.593-5.769-2.121-10.01-3.202-14.315 3.203-4.305 6.404-16.373 20.593-20.063 24.855-3.69 4.263-7.401 4.815-13.679 1.612-6.278-3.202-26.786-9.883-50.899-31.472a192.748 192.748 0 01-35.411-43.867c-3.712-6.363-.404-9.777 2.82-12.873 3.224-3.096 6.363-7.381 9.48-11.092a41.58 41.58 0 006.357-10.597 11.678 11.678 0 00-.508-11.09c-1.718-3.18-14.444-34.357-19.534-47.06-5.09-12.703-10.37-10.603-14.272-10.901-3.902-.297-7.911-.19-12.089-.19a23.322 23.322 0 00-16.964 7.911c-5.707 6.298-22.1 21.673-22.1 52.849s22.671 61.249 25.852 65.532c3.182 4.284 44.663 68.227 108.288 95.649 15.099 6.489 26.891 10.392 36.053 13.403a87.504 87.504 0 0025.216 3.718c4.905 0 9.82-.416 14.65-1.237 12.174-1.782 37.453-15.291 42.776-30.073s5.303-27.57 3.711-30.093c-1.591-2.524-5.704-4.369-12.088-7.615l-.038.021z"/></svg>
+                                <span class="button-text">WhatsApp</span>
+                            </button>
+                            <button data-cake="Délice Passion & Mangue" data-type="sms" class="contact-button" aria-label="Demande d'info sur Délice Passion & Mangue via SMS"> <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/></svg>
+                                <span class="button-text">Message</span>
+                            </button>
+                            <button data-cake="Délice Passion & Mangue" data-type="facebook" class="contact-button" aria-label="Contacter via Facebook pour Délice Passion & Mangue"> <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M279.14 288l14.22-92.66h-88.91v-60.13c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S260.43 0 225.36 0c-73.22 0-121.08 44.38-121.08 124.72v70.62H22.89V288h81.39v224h100.17V288z"/></svg>
+                                <span class="button-text">Facebook</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                 <div class="menu-item animate-on-scroll"> <!-- Added animate-on-scroll class -->
+                    <img src="Gemini_Generated_Image_ugxlthugxlthugxl.jpeg" alt="Tarte au Citron Meringuée"
+                         class="menu-item-image"
+                         onerror="this.onerror=null; this.src='https://placehold.co/600x400/333333/f472b6?text=Image+Manquante';"> <div class="menu-item-content">
+                        <h3 class="text-3xl font-semibold mb-4">Tarte au Citron Meringuée</h3>
+                        <p class="text-gray-300 mb-6 text-lg leading-relaxed">Pâte sucrée croustillante garnie d'une crème citron acidulée, couronnée de nuages de meringue italienne flambée. Un classique intemporel.</p> <div class="contact-buttons flex flex-col space-y-2 items-start sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2"> <!-- Responsive classes added -->
+                            <button data-cake="Tarte au Citron Meringuée" data-type="whatsapp" class="contact-button" aria-label="Demande d'info sur Tarte au Citron Meringuée via WhatsApp"> <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 509 511.514"><path fill="currentColor" d="M434.762 74.334C387.553 26.81 323.245 0 256.236 0h-.768C115.795.001 2.121 113.696 2.121 253.456l.001.015a253.516 253.516 0 0033.942 126.671L0 511.514l134.373-35.269a253.416 253.416 0 00121.052 30.9h.003.053C395.472 507.145 509 393.616 509 253.626c0-67.225-26.742-131.727-74.252-179.237l.014-.055zM255.555 464.453c-37.753 0-74.861-10.22-107.293-29.479l-7.72-4.602-79.741 20.889 21.207-77.726-4.984-7.975c-21.147-33.606-32.415-72.584-32.415-112.308 0-116.371 94.372-210.743 210.741-210.743 56.011 0 109.758 22.307 149.277 61.98a210.93 210.93 0 0161.744 149.095c0 116.44-94.403 210.869-210.844 210.869h.028zm115.583-157.914c-6.363-3.202-37.474-18.472-43.243-20.593-5.769-2.121-10.01-3.202-14.315 3.203-4.305 6.404-16.373 20.593-20.063 24.855-3.69 4.263-7.401 4.815-13.679 1.612-6.278-3.202-26.786-9.883-50.899-31.472a192.748 192.748 0 01-35.411-43.867c-3.712-6.363-.404-9.777 2.82-12.873 3.224-3.096 6.363-7.381 9.48-11.092a41.58 41.58 0 006.357-10.597 11.678 11.678 0 00-.508-11.09c-1.718-3.18-14.444-34.357-19.534-47.06-5.09-12.703-10.37-10.603-14.272-10.901-3.902-.297-7.911-.19-12.089-.19a23.322 23.322 0 00-16.964 7.911c-5.707 6.298-22.1 21.673-22.1 52.849s22.671 61.249 25.852 65.532c3.182 4.284 44.663 68.227 108.288 95.649 15.099 6.489 26.891 10.392 36.053 13.403a87.504 87.504 0 0025.216 3.718c4.905 0 9.82-.416 14.65-1.237 12.174-1.782 37.453-15.291 42.776-30.073s5.303-27.57 3.711-30.093c-1.591-2.524-5.704-4.369-12.088-7.615l-.038.021z"/></svg>
+                                <span class="button-text">WhatsApp</span>
+                            </button>
+                            <button data-cake="Tarte au Citron Meringuée" data-type="sms" class="contact-button" aria-label="Demande d'info sur Tarte au Citron Meringuée via SMS"> <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/></svg>
+                                <span class="button-text">Message</span>
+                            </button>
+                            <button data-cake="Tarte au Citron Meringuée" data-type="facebook" class="contact-button" aria-label="Contacter via Facebook pour Tarte au Citron Meringuée"> <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M279.14 288l14.22-92.66h-88.91v-60.13c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S260.43 0 225.36 0c-73.22 0-121.08 44.38-121.08 124.72v70.62H22.89V288h81.39v224h100.17V288z"/></svg>
+                                <span class="button-text">Facebook</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                 <div class="menu-item animate-on-scroll"> <!-- Added animate-on-scroll class -->
+                    <img src="Gemini_Generated_Image_qktpjsqktpjsqktp.jpeg" alt="Gâteau Opéra" class="menu-item-image"
+                         onerror="this.onerror=null; this.src='https://placehold.co/600x400/333333/f472b6?text=Image+Manquante';"> <div class="menu-item-content">
+                        <h3 class="text-3xl font-semibold mb-4">Opéra</h3>
+                        <p class="text-gray-300 mb-6 text-lg leading-relaxed">Couches de biscuit Joconde aux amandes, crème au beurre café et riche ganache chocolat, fini avec un glaçage miroir. Pure élégance parisienne.</p> <div class="contact-buttons flex flex-col space-y-2 items-start sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2"> <!-- Responsive classes added -->
+                           <button data-cake="Opéra" data-type="whatsapp" class="contact-button" aria-label="Demande d'info sur Opéra via WhatsApp"> <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 509 511.514"><path fill="currentColor" d="M434.762 74.334C387.553 26.81 323.245 0 256.236 0h-.768C115.795.001 2.121 113.696 2.121 253.456l.001.015a253.516 253.516 0 0033.942 126.671L0 511.514l134.373-35.269a253.416 253.416 0 00121.052 30.9h.003.053C395.472 507.145 509 393.616 509 253.626c0-67.225-26.742-131.727-74.252-179.237l.014-.055zM255.555 464.453c-37.753 0-74.861-10.22-107.293-29.479l-7.72-4.602-79.741 20.889 21.207-77.726-4.984-7.975c-21.147-33.606-32.415-72.584-32.415-112.308 0-116.371 94.372-210.743 210.741-210.743 56.011 0 109.758 22.307 149.277 61.98a210.93 210.93 0 0161.744 149.095c0 116.44-94.403 210.869-210.844 210.869h.028zm115.583-157.914c-6.363-3.202-37.474-18.472-43.243-20.593-5.769-2.121-10.01-3.202-14.315 3.203-4.305 6.404-16.373 20.593-20.063 24.855-3.69 4.263-7.401 4.815-13.679 1.612-6.278-3.202-26.786-9.883-50.899-31.472a192.748 192.748 0 01-35.411-43.867c-3.712-6.363-.404-9.777 2.82-12.873 3.224-3.096 6.363-7.381 9.48-11.092a41.58 41.58 0 006.357-10.597 11.678 11.678 0 00-.508-11.09c-1.718-3.18-14.444-34.357-19.534-47.06-5.09-12.703-10.37-10.603-14.272-10.901-3.902-.297-7.911-.19-12.089-.19a23.322 23.322 0 00-16.964 7.911c-5.707 6.298-22.1 21.673-22.1 52.849s22.671 61.249 25.852 65.532c3.182 4.284 44.663 68.227 108.288 95.649 15.099 6.489 26.891 10.392 36.053 13.403a87.504 87.504 0 0025.216 3.718c4.905 0 9.82-.416 14.65-1.237 12.174-1.782 37.453-15.291 42.776-30.073s5.303-27.57 3.711-30.093c-1.591-2.524-5.704-4.369-12.088-7.615l-.038.021z"/></svg>
+                                <span class="button-text">WhatsApp</span>
+                            </button>
+                            <button data-cake="Opéra" data-type="sms" class="contact-button" aria-label="Demande d'info sur Opéra via SMS"> <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/></svg>
+                                <span class="button-text">Message</span>
+                            </button>
+                            <button data-cake="Opéra" data-type="facebook" class="contact-button" aria-label="Contacter via Facebook pour Opéra"> <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M279.14 288l14.22-92.66h-88.91v-60.13c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S260.43 0 225.36 0c-73.22 0-121.08 44.38-121.08 124.72v70.62H22.89V288h81.39v224h100.17V288z"/></svg>
+                                <span class="button-text">Facebook</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                 <div class="menu-item animate-on-scroll"> <!-- Added animate-on-scroll class -->
+                    <img src="Gemini_Generated_Image_3zw1ej3zw1ej3zw1.jpeg" alt="Gâteau Ispahan Framboise Rose" class="menu-item-image"
+                         onerror="this.onerror=null; this.src='https://placehold.co/600x400/333333/f472b6?text=Image+Manquante';"> <div class="menu-item-content">
+                        <h3 class="text-3xl font-semibold mb-4">Ispahan Framboise Rose</h3>
+                        <p class="text-gray-300 mb-6 text-lg leading-relaxed">Inspiré du macaron iconique : crème à la rose, framboises fraîches et notes de litchi enfermées dans de délicates couches. Une fantaisie florale.</p> <div class="contact-buttons flex flex-col space-y-2 items-start sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2"> <!-- Responsive classes added -->
+                           <button data-cake="Ispahan Framboise Rose" data-type="whatsapp" class="contact-button" aria-label="Demande d'info sur Ispahan Framboise Rose via WhatsApp"> <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 509 511.514"><path fill="currentColor" d="M434.762 74.334C387.553 26.81 323.245 0 256.236 0h-.768C115.795.001 2.121 113.696 2.121 253.456l.001.015a253.516 253.516 0 0033.942 126.671L0 511.514l134.373-35.269a253.416 253.416 0 00121.052 30.9h.003.053C395.472 507.145 509 393.616 509 253.626c0-67.225-26.742-131.727-74.252-179.237l.014-.055zM255.555 464.453c-37.753 0-74.861-10.22-107.293-29.479l-7.72-4.602-79.741 20.889 21.207-77.726-4.984-7.975c-21.147-33.606-32.415-72.584-32.415-112.308 0-116.371 94.372-210.743 210.741-210.743 56.011 0 109.758 22.307 149.277 61.98a210.93 210.93 0 0161.744 149.095c0 116.44-94.403 210.869-210.844 210.869h.028zm115.583-157.914c-6.363-3.202-37.474-18.472-43.243-20.593-5.769-2.121-10.01-3.202-14.315 3.203-4.305 6.404-16.373 20.593-20.063 24.855-3.69 4.263-7.401 4.815-13.679 1.612-6.278-3.202-26.786-9.883-50.899-31.472a192.748 192.748 0 01-35.411-43.867c-3.712-6.363-.404-9.777 2.82-12.873 3.224-3.096 6.363-7.381 9.48-11.092a41.58 41.58 0 006.357-10.597 11.678 11.678 0 00-.508-11.09c-1.718-3.18-14.444-34.357-19.534-47.06-5.09-12.703-10.37-10.603-14.272-10.901-3.902-.297-7.911-.19-12.089-.19a23.322 23.322 0 00-16.964 7.911c-5.707 6.298-22.1 21.673-22.1 52.849s22.671 61.249 25.852 65.532c3.182 4.284 44.663 68.227 108.288 95.649 15.099 6.489 26.891 10.392 36.053 13.403a87.504 87.504 0 0025.216 3.718c4.905 0 9.82-.416 14.65-1.237 12.174-1.782 37.453-15.291 42.776-30.073s5.303-27.57 3.711-30.093c-1.591-2.524-5.704-4.369-12.088-7.615l-.038.021z"/></svg>
+                                <span class="button-text">WhatsApp</span>
+                            </button>
+                            <button data-cake="Ispahan Framboise Rose" data-type="sms" class="contact-button" aria-label="Demande d'info sur Ispahan Framboise Rose via SMS"> <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/></svg>
+                                <span class="button-text">Message</span>
+                            </button>
+                            <button data-cake="Ispahan Framboise Rose" data-type="facebook" class="contact-button" aria-label="Contacter via Facebook pour Ispahan Framboise Rose"> <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M279.14 288l14.22-92.66h-88.91v-60.13c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S260.43 0 225.36 0c-73.22 0-121.08 44.38-121.08 124.72v70.62H22.89V288h81.39v224h100.17V288z"/></svg>
+                                <span class="button-text">Facebook</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                </div>
+        </main>
+    </div>
+
+    <footer class="footer text-center py-12 md:py-16"> <!-- Increased padding -->
+        <div class="container mx-auto px-4">
+             <p class="text-pink-400">&copy; <span id="currentYear"></span> Must Cake. Tous droits réservés.</p>
+             <p class="text-gray-400 text-sm mt-3">Amoureusement créé à Lille, France</p> <!-- Slightly increased margin-top -->
+             <!-- Optional: Add social links or other info here -->
+        </div>
+    </footer>
+
+    <script>
+        // --- Paramètres Globaux ---
+        // IMPORTANT : Remplacez ces valeurs par vos informations réelles
+        const whatsappNumber = "33744708893"; // <<<--- METTRE À JOUR CE NUMÉRO ! (avec code pays)
+        const smsNumber = "33744708893";      // <<<--- METTRE À JOUR CE NUMÉRO ! (avec code pays)
+        const facebookPageUrl = "https://www.facebook.com/mustcake"; // <<<--- METTRE À JOUR CETTE URL !
+
+        // --- Arrière-plan Three.js ---
+        let scene, camera, renderer, particles, particleMaterial;
+        let mouseX = 0, mouseY = 0;
+        let windowHalfX = window.innerWidth / 2;
+        let windowHalfY = window.innerHeight / 2;
+
+        function initThreeJS() {
+            const canvas = document.getElementById('hero-canvas');
+            if (!canvas) return;
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x111111, 0.0015);
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 3000);
+            camera.position.z = 800;
+
+            const particleCount = 20000;
+            const particlesGeometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            const colors = new Float32Array(particleCount * 3);
+            const color = new THREE.Color();
+            const basePinkHue = 0.9;
+            const whiteValue = 0.95;
+
+            for (let i = 0; i < particleCount; i++) {
+                const x = Math.random() * 2500 - 1250;
+                const y = Math.random() * 2500 - 1250;
+                const z = Math.random() * 2500 - 1250;
+                positions[i * 3] = x;
+                positions[i * 3 + 1] = y;
+                positions[i * 3 + 2] = z;
+                const randomColorSelector = Math.random();
+                if (randomColorSelector < 0.6) {
+                    color.setHSL(basePinkHue + (Math.random() - 0.5) * 0.1, 0.9, Math.random() * 0.3 + 0.5);
+                } else {
+                    color.setHSL(0, 0, whiteValue - Math.random() * 0.15);
+                }
+                colors[i * 3] = color.r;
+                colors[i * 3 + 1] = color.g;
+                colors[i * 3 + 2] = color.b;
+            }
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            particleMaterial = new THREE.PointsMaterial({ size: 2.5, vertexColors: true, blending: THREE.AdditiveBlending, transparent: true, sizeAttenuation: true, depthWrite: false });
+            particles = new THREE.Points(particlesGeometry, particleMaterial);
+            scene.add(particles);
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.addEventListener('mousemove', onDocumentMouseMove, false);
+            document.addEventListener('touchstart', onDocumentTouchStart, { passive: false });
+            document.addEventListener('touchmove', onDocumentTouchMove, { passive: false });
+            window.addEventListener('resize', onWindowResize, false);
+        }
+
+        function onWindowResize() {
+            windowHalfX = window.innerWidth / 2;
+            windowHalfY = window.innerHeight / 2;
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function onDocumentMouseMove(event) {
+            mouseX = event.clientX - windowHalfX;
+            mouseY = event.clientY - windowHalfY;
+        }
+
+        function onDocumentTouchStart(event) {
+            if (event.touches.length === 1 && !event.target.closest('button, a')) {
+                event.preventDefault();
+                mouseX = event.touches[0].pageX - windowHalfX;
+                mouseY = event.touches[0].pageY - windowHalfY;
+            }
+        }
+
+        function onDocumentTouchMove(event) {
+            if (event.touches.length === 1 && !event.target.closest('button, a')) {
+                event.preventDefault();
+                mouseX = event.touches[0].pageX - windowHalfX;
+                mouseY = event.touches[0].pageY - windowHalfY;
+            }
+        }
+
+        function animateThreeJS() {
+            requestAnimationFrame(animateThreeJS);
+            renderThreeJS();
+        }
+
+        function renderThreeJS() {
+             if (!scene || !camera || !renderer || !particles) return;
+            const time = Date.now() * 0.00004;
+            camera.position.x += (mouseX * 0.3 - camera.position.x) * 0.015;
+            camera.position.y += (-mouseY * 0.3 - camera.position.y) * 0.015;
+            camera.lookAt(scene.position);
+            const rotationSpeed = time * 0.15;
+            particles.rotation.x = rotationSpeed * 0.5;
+            particles.rotation.y = rotationSpeed * 0.3;
+            renderer.render(scene, camera);
+        }
+
+        // --- Script Général de la Page ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialiser l'arrière-plan Three.js
+            try {
+                 initThreeJS();
+                 animateThreeJS();
+            } catch (error) {
+                 console.error("Échec de l'initialisation de Three.js:", error); // Message en français
+                 const canvas = document.getElementById('hero-canvas');
+                 if(canvas) canvas.style.display = 'none';
+            }
+
+            // Mettre à jour l'année du pied de page
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+            // Configurer les liens de contact
+            const contactButtons = document.querySelectorAll('.contact-button[data-cake]');
+
+            // Vérifier les numéros/URL placeholders (avertissement console uniquement)
+            if (whatsappNumber === "33744708893" || !whatsappNumber) {
+                 console.warn("⚠️ RAPPEL : Remplacez '33744708893' dans la variable whatsappNumber du script par votre numéro WhatsApp réel !"); // Message en français
+            }
+             if (smsNumber === "33744708893" || !smsNumber) {
+                 console.warn("⚠️ RAPPEL : Remplacez '33744708893' dans la variable smsNumber du script par votre numéro de téléphone réel pour les SMS !"); // Message en français
+            }
+            if (facebookPageUrl === "https://www.facebook.com/mustcake" || !facebookPageUrl) {
+                 console.warn("⚠️ RAPPEL : Remplacez 'https://www.facebook.com/mustcake' dans la variable facebookPageUrl du script par l'URL de votre page Facebook réelle !"); // Message en français
+            }
+
+            contactButtons.forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const cakeName = button.getAttribute('data-cake');
+                    const contactType = button.getAttribute('data-type');
+                    if (!cakeName || !contactType) return;
+
+                    const baseMessage = `Bonjour ! Je suis intéressé(e) par le gâteau "${cakeName}". Pouvez-vous m'en dire plus ?`; // Message en français
+                    const encodedMessage = encodeURIComponent(baseMessage);
+
+                    let contactUrl;
+
+                    switch (contactType) {
+                        case 'whatsapp':
+                            contactUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+                            break;
+                        case 'sms':
+                            // Le comportement des liens SMS peut varier. Le séparateur correct ('?' ou '&') dépend de l'OS.
+                            // Utiliser '?' est généralement plus sûr pour commencer.
+                            contactUrl = `sms:${smsNumber}?&body=${encodedMessage}`; // Utiliser '&' si le numéro a déjà des params, '?' sinon.
+                            break;
+                        case 'facebook':
+                            contactUrl = facebookPageUrl; // Ouvre simplement la page Facebook
+                            // Pour ouvrir Messenger directement (plus complexe et moins fiable) :
+                            // contactUrl = `https://m.me/YOUR_PAGE_ID_OR_USERNAME`; // Nécessite l'ID ou nom d'utilisateur de la page
+                            break;
+                        default:
+                            console.error("Type de contact inconnu:", contactType); // Message en français
+                            return;
+                    }
+
+                    // Ouvrir le lien
+                    window.open(contactUrl, '_blank', 'noopener,noreferrer');
+
+                    // Log des erreurs pour les placeholders
+                     if (contactType === 'whatsapp' && (whatsappNumber === "33744708893" || !whatsappNumber)) {
+                         console.error("Lien WhatsApp ouvert, mais le numéro est probablement incorrect (placeholder). Mettez à jour la variable 'whatsappNumber'."); // Message en français
+                     }
+                     if (contactType === 'sms' && (smsNumber === "33744708893" || !smsNumber)) {
+                         console.error("Lien SMS ouvert, mais le numéro est probablement incorrect (placeholder). Mettez à jour la variable 'smsNumber'."); // Message en français
+                     }
+                     if (contactType === 'facebook' && (facebookPageUrl === "https://www.facebook.com/mustcake" || !facebookPageUrl)) {
+                         console.error("Lien Facebook ouvert, mais l'URL est probablement incorrecte (placeholder). Mettez à jour la variable 'facebookPageUrl'."); // Message en français
+                     }
+                });
+            });
+
+            // Corriger l'interférence potentielle du toucher avec Three.js sur les boutons
+            const allButtonsAndLinks = document.querySelectorAll('button, a');
+            allButtonsAndLinks.forEach(el => {
+                el.addEventListener('touchstart', (e) => e.stopPropagation());
+                 el.addEventListener('touchmove', (e) => e.stopPropagation());
+            });
+
+            // --- Scroll Animation Logic ---
+            const animatedElements = document.querySelectorAll('.animate-on-scroll');
+
+            if ("IntersectionObserver" in window) {
+                const observer = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('is-visible');
+                            observer.unobserve(entry.target); // Stop observing once animated
+                        }
+                    });
+                }, {
+                    rootMargin: "0px 0px -100px 0px" // Trigger a bit before it's fully in view
+                });
+
+                animatedElements.forEach(el => observer.observe(el));
+            } else {
+                // Fallback for older browsers (simply show elements)
+                animatedElements.forEach(el => el.classList.add('is-visible'));
+                console.warn("IntersectionObserver n'est pas supporté. Les animations au défilement sont désactivées.");
+            }
+            // --- Fin de la logique d'animation au défilement ---
+
+
+            // --- Mobile Menu Toggle Logic ---
+            const menuButton = document.getElementById('mobile-menu-button');
+            const closeButton = document.getElementById('mobile-menu-close-button');
+            const mobileMenuOverlay = document.getElementById('mobile-menu-overlay'); // Changed ID
+            const mobileMenuLinks = mobileMenuOverlay.querySelectorAll('a'); // Changed parent element
+
+            menuButton.addEventListener('click', () => {
+                mobileMenuOverlay.classList.add('is-open'); // Use is-open class
+            });
+
+            closeButton.addEventListener('click', () => {
+                 mobileMenuOverlay.classList.remove('is-open'); // Use is-open class
+            });
+
+             // Close menu when a link is clicked (for single-page navigation)
+             mobileMenuLinks.forEach(link => {
+                 link.addEventListener('click', () => {
+                     mobileMenuOverlay.classList.remove('is-open'); // Use is-open class
+                 });
+             });
+            // --- Fin de la logique du menu mobile ---
+
+        });
+
+    </script>
+
+</body>
+</html>
